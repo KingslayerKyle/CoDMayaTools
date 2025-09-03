@@ -2584,16 +2584,16 @@ def AddNote(windowID):
 
 def __get_notetracks__():
     """Loads all the notetracks in the scene"""
-    if not cmds.objExists("SENotes"):
-        cmds.rename(cmds.spaceLocator(), "SENotes")
+    if not cmds.objExists("CastNotetracks"):
+        cmds.rename(cmds.spaceLocator(), "CastNotetracks")
 
-    if not cmds.objExists("SENotes.Notetracks"):
-        cmds.addAttr("SENotes", longName="Notetracks",
+    if not cmds.objExists("CastNotetracks.Notetracks"):
+        cmds.addAttr("CastNotetracks", longName="Notetracks",
                      dataType="string", storable=True)
-        cmds.setAttr("SENotes.Notetracks", "{}", type="string")
+        cmds.setAttr("CastNotetracks.Notetracks", "{}", type="string")
 
     # Load the existing notetracks buffer, then ensure we have this notetrack
-    return json.loads(cmds.getAttr("SENotes.Notetracks"))
+    return json.loads(cmds.getAttr("CastNotetracks.Notetracks"))
 
 def ReadNotetracks(windowID):
     """
@@ -2639,7 +2639,13 @@ def RenameNotes(windowID):
     slotIndex = cmds.optionMenu(OBJECT_NAMES[windowID][0]+"_SlotDropDown", query=True, select=True)
     currentIndex = cmds.textScrollList(OBJECT_NAMES[windowID][0]+"_NoteList", query=True, selectIndexedItem=True)
     if currentIndex != None and len(currentIndex) > 0 and currentIndex[0] >= 1:
-        if cmds.promptDialog(title="Rename NoteTrack in slot", message="Enter new notetrack name:\t\t  ") != "Confirm":
+        noteList = cmds.getAttr(OBJECT_NAMES[windowID][2]+(".notetracks[%i]" % slotIndex)) or ""
+        notes = noteList.split(",")
+        noteInfo = notes[currentIndex[0]-1].split(":")
+        oldNoteName = noteInfo[0]
+        note = int(noteInfo[1])
+
+        if cmds.promptDialog(title="Rename NoteTrack in slot", message="Enter new notetrack name:\t\t  ", text=oldNoteName) != "Confirm":
             return
 
         userInput = cmds.promptDialog(query=True, text=True)
@@ -2648,10 +2654,6 @@ def RenameNotes(windowID):
             MessageBox("Invalid note name")
             return
         currentIndex = currentIndex[0]
-        noteList = cmds.getAttr(OBJECT_NAMES[windowID][2]+(".notetracks[%i]" % slotIndex)) or ""
-        notes = noteList.split(",")
-        noteInfo = notes[currentIndex-1].split(":")
-        note = int(noteInfo[1])
         NoteTrack = userInput
 
         # REMOVE NOTE
